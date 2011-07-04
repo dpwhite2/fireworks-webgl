@@ -17,7 +17,12 @@ window.requestAnimFrame = (function(){
 (function() {
 //============================================================================//
 fireworks.start = function() {
+    document.body.clientWidth
+    
     var canvas = document.getElementById("glcanvas");
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+    
     app = new fireworks.App(canvas);
     if (gl) {
         requestAnimFrame(fireworks.do_turn, canvas);
