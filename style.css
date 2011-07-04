@@ -1,0 +1,24 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+canvas {
+    background: black;
+}
+
+#info-container {
+    font-family: sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    color: rgb(160,160,160);
+}
+
+#controls {
+    position: absolute;
+    left: 1010px;
+    top: 10px;
+}

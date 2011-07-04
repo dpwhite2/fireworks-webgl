@@ -1,0 +1,13 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec4 vColor;
+vec2 center = vec2(1., 1.);
+
+void main(void) {
+    //vec2 pt = vec2(2.*gl_PointCoord[0], 2.*gl_PointCoord[1]);
+    //float d = smoothstep(0., 0.4, 1.0 - distance(center, pt));
+    gl_FragColor = vColor;
+    //gl_FragColor[3] = d*gl_FragColor[3];
+}

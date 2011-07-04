@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Fireworks: A WebGL Simulation</title>
+    <script src="lib/sylvester.js" type="text/javascript"></script>
+    <script src="lib/glUtils.js" type="text/javascript"></script>
+    <script src="lib/matrixutil.js" type="text/javascript"></script>
+    
+    <script src="fireworks/fireworks.js" type="text/javascript"></script>
+    <script src="fireworks/config.js" type="text/javascript"></script>
+    <script src="fireworks/sim.js" type="text/javascript"></script>
+    <script src="fireworks/shaders.js" type="text/javascript"></script>
+    <script src="fireworks/glcontext.js" type="text/javascript"></script>
+    <script src="fireworks/renderer.js" type="text/javascript"></script>
+    <script src="fireworks/app.js" type="text/javascript"></script>
+    <script src="fireworks/main.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css" />    
+</head>
+
+<body onload="fireworks.start()">
+    <div id="controls">
+    </div>
+    
+    <canvas id="glcanvas" width="1200" height="900">
+        WebGL is required to display this content.
+    </canvas>
+    
+    <div id="info-container">
+        <div><span>FPS:</span> <span id="fps-value">0</span><div>
+        <div><span>Angle:</span> <span id="angle-value">0</span><div>
+        <div><span>x:</span> <span id="x-value">0</span><div>
+        <div><span>y:</span> <span id="y-value">0</span><div>
+        <div><span>z:</span> <span id="z-value">0</span><div>
+        <div><span>Particles:</span> <span id="particles-count">0</span><div>
+        <div><span>Mortars:</span> <span id="mortars-count">0</span><div>
+        <div><span>Explosions:</span> <span id="explosions-count">0</span><div>
+    </div>
+    
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+attribute vec3 particlePosition;
+attribute vec4 particleColor;
+attribute float particleSize;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+varying vec4 vColor;
+
+void main(void) {
+    gl_PointSize = max(particleSize, 1.0);
+    gl_Position = uPMatrix * uMVMatrix * vec4(particlePosition, 1.0);
+    vColor = particleColor;
+}

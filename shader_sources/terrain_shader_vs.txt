@@ -1,0 +1,43 @@
+attribute vec3 position;
+attribute vec3 normal;
+attribute vec4 color;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+
+uniform int n_lights;
+struct Light {
+    vec3 pos;
+    vec4 color;
+};
+uniform Light lights[8];
+
+//uniform vec3 light_pos;
+//uniform vec3 light_color;
+uniform vec3 ambient_color;
+
+varying vec4 vColor;
+varying vec3 light_weighting;
+
+void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(position, 1.0);
+    //vec4 mvpos = uMVMatrix * vec4(position, 1.0);
+    //gl_Position = uPMatrix * mvpos;
+    
+    //vec3 lightDirection = normalize(light_pos - position.xyz);
+    //vec3 transformedNormal = uNMatrix * normal;
+    vec3 transformedNormal = normal;
+    
+    //float pos_light_weight = max(dot(transformedNormal, lightDirection), 0.0);
+    //light_weighting = ambient_color + light_color * pos_light_weight;
+    
+    light_weighting = ambient_color;
+    for (int i=0; i<8; i++) {
+        if (i>=n_lights) break;
+        vec3 lightDirection = normalize(lights[i].pos - position.xyz);
+        float pos_light_weight = max(dot(transformedNormal, lightDirection), 0.0);
+        light_weighting += lights[i].color.rgb * pos_light_weight * lights[i].color.a *0.1;
+    }
+    
+    vColor = color;
+}

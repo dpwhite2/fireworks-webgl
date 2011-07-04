@@ -1,0 +1,10 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec4 vColor;
+varying vec3 light_weighting;
+
+void main(void) {
+    gl_FragColor = vec4(vColor.rgb * light_weighting, vColor.a);
+}
