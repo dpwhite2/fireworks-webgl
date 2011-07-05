@@ -11,6 +11,7 @@ function App(canvas) {
     
     this.mortar_renderer = new fireworks.MortarRenderer();
     this.particles_renderer = new fireworks.ParticlesRenderer();
+    this.exhaust_renderer = new fireworks.ExhaustRenderer();
     
     this.cam = new fireworks.Camera(this.glcontext);
     this.sim = new fireworks.Sim();
@@ -38,8 +39,9 @@ App.prototype.render = function() {
     this.terrain_renderer.render(this.sim, this.cam);
     //this.grid_renderer.render(this.sim, this.cam);
     //this.axes_renderer.render(this.sim, this.cam);
-    this.mortar_renderer.render(this.sim, this.cam);
     this.particles_renderer.render(this.sim, this.cam);
+    this.mortar_renderer.render(this.sim, this.cam);
+    this.exhaust_renderer.render(this.sim, this.cam);
 }
 
 App.prototype.add_frametime = function() {

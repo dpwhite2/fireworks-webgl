@@ -259,9 +259,6 @@ function TerrainRenderer() {
     this.pos_attr = this.shader_prog.get_attrib_location("position");
     this.normal_attr = this.shader_prog.get_attrib_location("normal");
     
-    //this.lightpos_uni = this.shader_prog.get_uniform_location("light_pos");
-    //this.lightcol_uni = this.shader_prog.get_uniform_location("light_color");
-    //this.lights_uni = this.shader_prog.get_uniform_location("lights");
     this.lights_uni = [];
     for (var i=0; i<8; i++) {
         var posname = "lights[" + i + "].pos";
@@ -270,10 +267,6 @@ function TerrainRenderer() {
                    color: this.shader_prog.get_uniform_location(colorname)};
         this.lights_uni.push(obj);
     }
-    /*this.lights_uni = [
-        {pos: this.shader_prog.get_uniform_location("lights[0].pos"), 
-         color: this.shader_prog.get_uniform_location("lights[0].color")}
-    ];*/
     this.n_lights_uni = this.shader_prog.get_uniform_location("n_lights");
     this.ambient_uni = this.shader_prog.get_uniform_location("ambient_color");
     
@@ -330,8 +323,6 @@ TerrainRenderer.prototype.update_terrain = function(sim, cam) {
     for (var i=0; i<n; i++) {
         var e = sim.explosions[i];
         gl.uniform3fv(this.lights_uni[i].pos, new Float32Array(e.pos));
-        //var color = [e.color[0], e.color[1], e.color[2]];
-        //gl.uniform3fv(this.lights_uni[i].color, new Float32Array(color));
         gl.uniform4fv(this.lights_uni[i].color, new Float32Array(e.color));
     }
     gl.uniform1i(this.n_lights_uni, n);
@@ -357,17 +348,8 @@ TerrainRenderer.prototype.render = function(sim, cam) {
     gl.vertexAttribPointer(this.normal_attr, 3, gl.FLOAT, false, 0, 0);
     
     setMatrixUniforms(perspective_matrix, mvMatrix, this.shader_prog.get());
-    //var ambient = [0.1,0.1,0.1];
     var ambient = [0,0,0];
     gl.uniform3fv(this.ambient_uni, new Float32Array(ambient));
-    /*gl.uniform1i(this.n_lights_uni, 1);
-    //var lights = [0,10,0,   0.9,0.2,0.2]
-    gl.uniform3fv(this.lights_uni[0].pos, new Float32Array([0,10,0]));
-    gl.uniform3fv(this.lights_uni[0].color, new Float32Array([0.9,0.2,0.2]));*/
-    /*var lightpos = [0,10,0];
-    gl.uniform3fv(this.lightpos_uni, new Float32Array(lightpos));
-    var lightcol = [0.9,0.2,0.2];
-    gl.uniform3fv(this.lightcol_uni, new Float32Array(lightcol));*/
     
     for (var i=0; i<this.columns; i++) {
         gl.drawArrays(gl.TRIANGLE_STRIP, i*(this.rows*2+2), this.rows*2+2);
@@ -394,6 +376,15 @@ function ParticlesRenderer() {
     
     this.size_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.size_buffer);
+    
+    this.streak_vertex_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_vertex_buffer);
+    
+    this.streak_color_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_color_buffer);
+    
+    this.streak_size_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_size_buffer);
 }
 
 //var flag = false;
@@ -402,17 +393,32 @@ ParticlesRenderer.prototype.update_particles = function(sim, cam) {
     var points = [];
     var colors = [];
     var sizes = [];
+    //var indexes = [];
+    this.streaks = [];
+    var streak_colors = [];
+    var streak_sizes = [];
     
     for (var i = 0; i < sim.particles.length; i++) {
-        p = sim.particles[i];
+        var p = sim.particles[i];
         points.push(p.pos[0], p.pos[1], p.pos[2]);
-        //var a = Math.min(Math.max((p.v[1]+20)/30, 0.5), 1.0); // alpha is based on vertical speed
-        //var a = Math.min(Math.max((p.v[1])/40, 0.3), 1.0); // alpha is based on vertical speed
-        //var k = (Math.max(p.v[1]-10, 0.))/6;
-        //var rk = Math.random()*0.3 + 0.7;
-        //var gk = Math.random()*0.3 + 0.7;
         colors.push(p.color[0], p.color[1], p.color[2], p.color[3]);
         sizes.push(p.size);
+    }
+    
+    for (var i = 0; i < sim.particles.length; i++) {
+        var p = sim.particles[i];
+        if (p.history.length > 1) {
+            for (var j=0; j<p.history.length-1; j++) {
+                var wt0 = j / fireworks.config.particle_history_size;
+                var wt1 = (j+1) / fireworks.config.particle_history_size;
+                this.streaks.push(p.history[j][0], p.history[j][1], p.history[j][2]);
+                this.streaks.push(p.history[j+1][0], p.history[j+1][1], p.history[j+1][2]);
+                streak_colors.push(p.color[0], p.color[1], p.color[2], p.color[3]*wt0);
+                streak_colors.push(p.color[0], p.color[1], p.color[2], p.color[3]*wt1);
+                streak_sizes.push(p.size);
+                streak_sizes.push(p.size);
+            }
+        }
     }
     
     /*if (!flag && points.length > 0) {
@@ -428,6 +434,17 @@ ParticlesRenderer.prototype.update_particles = function(sim, cam) {
     
     gl.bindBuffer(gl.ARRAY_BUFFER, this.size_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sizes), gl.STATIC_DRAW);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_vertex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.streaks), gl.STATIC_DRAW);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_color_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(streak_colors), gl.STATIC_DRAW);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_size_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(streak_sizes), gl.STATIC_DRAW);
+    
+    //return indexes;
 }
 
 ParticlesRenderer.prototype.render = function(sim, cam) {
@@ -442,7 +459,6 @@ ParticlesRenderer.prototype.render = function(sim, cam) {
     var perspective_matrix = cam.perspective_matrix();
     var mvMatrix = cam.translation_matrix();
     
-    // draw axes
     gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buffer);
     gl.vertexAttribPointer(this.color_attr, 4, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -452,9 +468,107 @@ ParticlesRenderer.prototype.render = function(sim, cam) {
     
     setMatrixUniforms(perspective_matrix, mvMatrix, this.shader_prog.get());
     gl.drawArrays(gl.POINTS, 0, sim.particles.length);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_color_buffer);
+    gl.vertexAttribPointer(this.color_attr, 4, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_vertex_buffer);
+    gl.vertexAttribPointer(this.pos_attr, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.streak_size_buffer);
+    gl.vertexAttribPointer(this.size_attr, 1, gl.FLOAT, false, 0, 0);
+    
+    setMatrixUniforms(perspective_matrix, mvMatrix, this.shader_prog.get());
+    
+    gl.drawArrays(gl.LINES, 0, this.streaks.length/3);
 }
 
 fireworks.ParticlesRenderer = ParticlesRenderer;
+
+//============================================================================//
+function ExhaustRenderer() {
+    // shaders
+    this.shader_prog = new ShaderProgram("particles_shader_fs_text", "particles_shader_vs_text");
+    this.shader_prog.use()
+    this.color_attr = this.shader_prog.get_attrib_location("particleColor");
+    this.pos_attr = this.shader_prog.get_attrib_location("particlePosition");
+    this.size_attr = this.shader_prog.get_attrib_location("particleSize");
+    
+    // buffers
+    this.vertex_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    
+    this.color_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buffer);
+    
+    this.size_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.size_buffer);
+}
+
+//var flag = false;
+var count = 0;
+
+ExhaustRenderer.prototype.update_particles = function(sim, cam) {
+    var points = [];
+    var colors = [];
+    var sizes = [];
+    
+    for (var i = 0; i < sim.exhausts.length; i++) {
+        var p = sim.exhausts[i];
+        points.push(p.pos[0], p.pos[1], p.pos[2]);
+        colors.push(Math.max(p.color[0], 0.1), Math.max(p.color[1], 0.1), 
+                    Math.max(p.color[2], 0.1), Math.max(p.color[3], 0.1));
+        sizes.push(Math.max(p.size, 0.3));
+    }
+    
+    /*if (count < 65) {
+        count++;
+    } else if (count < 200 && sim.exhausts.length < 4) {
+        console.log("n: " + count + "...");
+        console.log("exhausts length: " + sim.exhausts.length);
+        console.log("points length:   " + points.length);
+        console.log("points: " + points);
+        console.log("colors: " + colors);
+        console.log("sizes:  " + sizes);
+        count++;
+    }*/
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.size_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sizes), gl.STATIC_DRAW);
+}
+
+ExhaustRenderer.prototype.render = function(sim, cam) {
+    gl.flush();
+    if (sim.exhausts.length == 0) {
+        return;
+    }
+    //gl.useProgram(this.shader_prog.get());
+    this.shader_prog.use();
+    gl.enableVertexAttribArray(this.pos_attr);
+    gl.enableVertexAttribArray(this.color_attr);
+    gl.enableVertexAttribArray(this.size_attr);
+    
+    this.update_particles(sim, cam);
+    
+    var perspective_matrix = cam.perspective_matrix();
+    var mvMatrix = cam.translation_matrix();
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buffer);
+    gl.vertexAttribPointer(this.color_attr, 4, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.vertexAttribPointer(this.pos_attr, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.size_buffer);
+    gl.vertexAttribPointer(this.size_attr, 1, gl.FLOAT, false, 0, 0);
+    
+    setMatrixUniforms(perspective_matrix, mvMatrix, this.shader_prog.get());
+    gl.drawArrays(gl.POINTS, 0, sim.exhausts.length);
+}
+
+fireworks.ExhaustRenderer = ExhaustRenderer;
 
 //============================================================================//
 function MortarRenderer() {

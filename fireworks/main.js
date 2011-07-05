@@ -39,10 +39,11 @@ function random_exponential(lambda) {
 }
 
 fireworks.launch_mortars = function() {
-    var min_vy = 16.0;
-    var max_vy = 19.5;
-    var max_vx = 3;
-    var max_x = 1;
+    var min_vy = 14.0;
+    var max_vy = 18.0;
+    //var max_vx = 5;
+    var max_x = 2;
+    var max_launch_angle = 15; // angle from vertical, in degrees
     var n = 1;
     
     for (var i=0; i<n; i++) {
@@ -52,14 +53,18 @@ fireworks.launch_mortars = function() {
         var z = Math.sin(a)*d;
         var y = 0.;
         
-        var va = Math.random()*Math.PI*2;
-        var vdr = Math.random();
-        var vd = Math.random()*max_vx;
-        var vx = Math.cos(va)*vd;
-        var vz = Math.sin(va)*vd;
-        var vy = random_neg()*(max_vy-min_vy) + min_vy;
+        var r = fireworks.random_range(min_vy, max_vy);
+        var pt = fireworks.random_in_cone(r, (Math.PI/180)*max_launch_angle);
+        //var va = Math.random()*Math.PI*2;
+        //var vd = Math.random()*max_vx;
+        //var vx = Math.cos(va)*vd;
+        //var vz = Math.sin(va)*vd;
+        //var vy = fireworks.random_range(min_vy, max_vy);
+        var vx = pt[0];
+        var vy = pt[2]; // y and z swapped on purpose
+        var vz = pt[1];
         
-        var m = new fireworks.Mortar([x,y,z],[vx,vy,vz],[0.5,0.5,0.5,1],3);
+        var m = new fireworks.Mortar([x,y,z],[vx,vy,vz],[0.2,0.2,0.2,0.5],2);
         app.sim.add_mortar(m);
     }
 }
@@ -69,7 +74,7 @@ var next_launch_turn = 60;
 fireworks.launch_fireworks = function() {
     if (app.sim.turn == next_launch_turn) {
         fireworks.launch_mortars();
-        next_launch_turn+= + Math.floor(Math.random()*75) + 15;
+        next_launch_turn+= Math.floor(fireworks.random_range(30, 120));
     }
 }
 

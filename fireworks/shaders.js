@@ -93,7 +93,7 @@ void main(void) {\n\
         if (i>=n_lights) break;\n\
         vec3 lightDirection = normalize(lights[i].pos - position.xyz);\n\
         float pos_light_weight = max(dot(transformedNormal, lightDirection), 0.0);\n\
-        light_weighting += lights[i].color.rgb * pos_light_weight * lights[i].color.a *0.1;\n\
+        light_weighting += lights[i].color.rgb * pos_light_weight * lights[i].color.a *0.05;\n\
     }\n\
     \n\
     vColor = color;\n\
